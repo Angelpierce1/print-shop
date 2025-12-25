@@ -105,3 +105,6 @@ The app checks both:
 - **Images (Input)**: JPG, PNG, GIF, BMP, TIFF, HEIC, HEIF
 - **PDF (Input)**: PDF files (converted to images)
 - **Output**: JPG (for HEIC/PDF conversions), Original format (for other images)
+
+
+

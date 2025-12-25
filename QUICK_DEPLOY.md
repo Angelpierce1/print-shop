@@ -67,3 +67,6 @@ Your client can access the app at the Streamlit Cloud URL. The app includes:
 - ✅ Image quality checking
 - ✅ HEIC to JPG conversion
 - ⚠️ PDF processing (may not work on Streamlit Cloud - use Railway for full PDF support)
+
+
+

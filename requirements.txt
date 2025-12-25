@@ -11,3 +11,6 @@ PyPDF2>=3.0.0
 # macOS: brew install poppler
 # Ubuntu/Debian: sudo apt-get install poppler-utils
 # Windows: Download poppler from https://github.com/oschwartz10612/poppler-windows/releases
+
+
+

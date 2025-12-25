@@ -798,3 +798,6 @@ st.markdown("""
 3. **High quality** images have ≥ 300 DPI (standard for professional printing)
 4. **Low quality** images have < 300 DPI and may appear pixelated when printed
 """)
+
+
+

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import ImageUploader from '@/components/ImageUploader'
-import BatchProcessor from '@/components/BatchProcessor'
-import HEICConverter from '@/components/HEICConverter'
+import ImageUploader from '../components/ImageUploader'
+import BatchProcessor from '../components/BatchProcessor'
+import HEICConverter from '../components/HEICConverter'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('upload')

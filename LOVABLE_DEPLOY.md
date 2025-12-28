@@ -51,3 +51,6 @@
 2. Test all features
 3. Add PDF support if needed (consider Python API backend)
 4. Enhance HEIC conversion if needed
+
+
+

@@ -105,29 +105,27 @@ export default function ImageUploader({ targetWidth }: ImageUploaderProps) {
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-gray-50 p-3 rounded-lg text-center">
-                        <p className="text-xs text-gray-500">Metadata DPI</p>
+                        <p className="text-xs text-gray-500">Width (pixels)</p>
                         <p className="text-lg font-semibold">
-                          {result.metadata_dpi || 'N/A'}
+                          {result.width_px}
                         </p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg text-center">
-                        <p className="text-xs text-gray-500">Effective DPI</p>
+                        <p className="text-xs text-gray-500">Height (pixels)</p>
                         <p className="text-lg font-semibold">
-                          {Math.round(result.effective_dpi)}
+                          {result.height_px}
                         </p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg text-center">
-                        <p className="text-xs text-gray-500">Target Width</p>
+                        <p className="text-xs text-gray-500">Max Dimension</p>
                         <p className="text-lg font-semibold">
-                          {targetWidth}&quot;
+                          {result.max_dimension}
                         </p>
                       </div>
                     </div>
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <p className="text-sm">
-                        <strong>Recommended max print size for 300 DPI:</strong>{' '}
-                        {(result.width_px / 300).toFixed(2)}&quot; ×{' '}
-                        {(result.height_px / 300).toFixed(2)}&quot;
+                        <strong>Pixel range:</strong> 480 - 1824 pixels
                       </p>
                     </div>
                   </>
@@ -144,3 +142,7 @@ export default function ImageUploader({ targetWidth }: ImageUploaderProps) {
     </div>
   )
 }
+
+
+
+

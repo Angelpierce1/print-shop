@@ -18,7 +18,7 @@ export default function Home() {
             🖨️ Print Shop
           </h1>
           <p className="text-lg text-gray-600">
-            Image Quality Checker - Verify print quality standards (300 DPI minimum)
+            Image Quality Checker - Verify print quality standards (480-1824 pixels)
           </p>
         </div>
 
@@ -43,8 +43,8 @@ export default function Home() {
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold mb-2">📊 Quality Standards</h3>
             <p className="text-sm">
-              <strong>High Quality:</strong> ≥ 300 DPI<br />
-              <strong>Low Quality:</strong> &lt; 300 DPI
+              <strong>High Quality:</strong> 480 - 1824 pixels<br />
+              <strong>Low Quality:</strong> &lt; 480 or &gt; 1824 pixels
             </p>
           </div>
         </div>
@@ -102,12 +102,16 @@ export default function Home() {
           <h3 className="font-semibold mb-2">📝 How it works</h3>
           <ol className="list-decimal list-inside space-y-1">
             <li>Upload an image using the file uploader</li>
-            <li>The app checks the image&apos;s DPI (dots per inch) at your target print width</li>
-            <li>High quality images have ≥ 300 DPI (standard for professional printing)</li>
-            <li>Low quality images have &lt; 300 DPI and may appear pixelated when printed</li>
+            <li>The app checks the image&apos;s pixel dimensions</li>
+            <li>High quality images have dimensions between 480 and 1824 pixels</li>
+            <li>Low quality images have dimensions outside this range</li>
           </ol>
         </div>
       </div>
     </main>
   )
 }
+
+
+
+

@@ -1,0 +1,31 @@
+#!/bin/bash
+# Print Shop launcher script
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Check if we're in a virtual environment
+if [ -d "$PROJECT_DIR/venv" ]; then
+    source "$PROJECT_DIR/venv/bin/activate"
+fi
+
+# Check if streamlit is installed
+if ! command -v streamlit &> /dev/null; then
+    echo "Error: streamlit is not installed."
+    echo "Please install dependencies: pip install -r requirements.txt"
+    exit 1
+fi
+
+# Check if poppler is installed (for PDF support)
+if ! command -v pdftoppm &> /dev/null; then
+    echo "Warning: poppler is not installed. PDF features will not work."
+    echo "Install with: brew install poppler"
+fi
+
+# Change to project directory
+cd "$PROJECT_DIR"
+
+# Run streamlit app
+exec streamlit run app.py "$@"
+

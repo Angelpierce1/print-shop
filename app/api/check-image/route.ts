@@ -22,31 +22,30 @@ export async function POST(request: NextRequest) {
     
     const width_px = metadata.width || 0
     const height_px = metadata.height || 0
-    const dpi = metadata.density || null
-    const metadata_dpi = dpi ? Math.round(dpi) : null
+    const min_pixels = 480
+    const max_pixels = 1824
 
-    // Calculate effective DPI
-    const effective_dpi = width_px / targetWidth
+    // Check pixel dimensions (using the larger dimension)
+    const max_dimension = Math.max(width_px, height_px)
 
     const result = {
       status: 'success',
-      metadata_dpi,
-      effective_dpi,
       width_px,
       height_px,
+      max_dimension,
       target_width_inch: targetWidth,
       message: '',
       quality: '' as 'high' | 'low',
     }
 
-    if (metadata_dpi && metadata_dpi >= 300) {
-      result.message = `✅ Metadata confirms ${metadata_dpi} DPI - High Quality!`
+    if (max_dimension >= min_pixels && max_dimension <= max_pixels) {
+      result.message = `✅ Image dimensions are within acceptable range (${width_px} × ${height_px} pixels) - High Quality!`
       result.quality = 'high'
-    } else if (effective_dpi >= 300) {
-      result.message = `✅ Pixel density is high enough (${Math.round(effective_dpi)} effective DPI) - High Quality!`
-      result.quality = 'high'
+    } else if (max_dimension < min_pixels) {
+      result.message = `⚠️ Image too small. Maximum dimension is ${max_dimension} pixels (minimum: ${min_pixels} pixels) - Low Quality`
+      result.quality = 'low'
     } else {
-      result.message = `⚠️ Image too small. Only ${Math.round(effective_dpi)} DPI at ${targetWidth}" - Low Quality`
+      result.message = `⚠️ Image too large. Maximum dimension is ${max_dimension} pixels (maximum: ${max_pixels} pixels) - Low Quality`
       result.quality = 'low'
     }
 
@@ -58,3 +57,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+
+
+

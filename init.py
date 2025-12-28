@@ -1,4 +1,7 @@
 print("Hello, World!")
+import warnings
+# Suppress pymp warnings
+warnings.filterwarnings('ignore')
 try:
     import pymp
     Pymp_AVAILABLE = True

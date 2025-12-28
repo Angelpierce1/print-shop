@@ -120,15 +120,13 @@ export default function BatchProcessor({ targetWidth }: BatchProcessorProps) {
                       <div className="text-sm space-y-1">
                         <p>
                           <strong>Dimensions:</strong> {result.width_px} ×{' '}
-                          {result.height_px} px
+                          {result.height_px} pixels
                         </p>
                         <p>
-                          <strong>Metadata DPI:</strong>{' '}
-                          {result.metadata_dpi || 'N/A'}
+                          <strong>Max Dimension:</strong> {result.max_dimension} pixels
                         </p>
                         <p>
-                          <strong>Effective DPI:</strong>{' '}
-                          {Math.round(result.effective_dpi)}
+                          <strong>Range:</strong> 480 - 1824 pixels
                         </p>
                       </div>
                     </>
@@ -146,3 +144,7 @@ export default function BatchProcessor({ targetWidth }: BatchProcessorProps) {
     </div>
   )
 }
+
+
+
+

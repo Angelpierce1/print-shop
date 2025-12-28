@@ -31,10 +31,42 @@ jobs:
         run: npm ci
       
       - name: Build application
-        run: npm run build
+        id: build
+        run: |
+          echo "🔨 Building Next.js app for GitHub Pages..."
+          npm run build || {
+            echo "::error::Build failed!"
+            echo ""
+            echo "❌ GitHub Pages Deployment Failed"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "⚠️  Common causes:"
+            echo "   1. API routes cannot be statically exported"
+            echo "   2. Server-side features are not supported"
+            echo "   3. Dynamic routes without getStaticPaths"
+            echo ""
+            echo "💡 Solutions:"
+            echo "   • Use Vercel (supports API routes): See .github/workflows/deploy.yml"
+            echo "   • Remove API routes for static export"
+            echo "   • Use a platform that supports serverless functions"
+            echo ""
+            echo "📚 Learn more: https://nextjs.org/docs/app/building-your-application/deploying/static-exports"
+            exit 1
+          }
         env:
           NODE_ENV: production
           GITHUB_PAGES: 'true'
+      
+      - name: Verify build output
+        run: |
+          if [ ! -d "./out" ]; then
+            echo "::error::Build output directory './out' not found"
+            echo "The build may have completed but did not generate static files."
+            exit 1
+          fi
+          echo "✅ Build output verified at ./out"
+          echo "📦 Contents:"
+          ls -la ./out | head -20
       
       - name: Setup Pages
         uses: actions/configure-pages@v3

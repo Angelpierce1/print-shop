@@ -9,6 +9,8 @@ const nextConfig = {
   ...(process.env.GITHUB_PAGES === 'true' && {
     output: 'export',
     trailingSlash: true,
+    // Note: API routes will not work with static export
+    // If you need API routes, use Vercel or another platform
   }),
 }
 

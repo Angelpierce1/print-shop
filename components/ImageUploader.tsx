@@ -125,7 +125,7 @@ export default function ImageUploader({ targetWidth }: ImageUploaderProps) {
                     </div>
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <p className="text-sm">
-                        <strong>Pixel range:</strong> 480 - 1824 pixels
+                        <strong>Pixel range:</strong> 480+ pixels
                       </p>
                     </div>
                   </>

@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
           const width_px = metadata.width || 0
           const height_px = metadata.height || 0
           const min_pixels = 480
-          const max_pixels = 1824
 
           // Check pixel dimensions (using the larger dimension)
           const max_dimension = Math.max(width_px, height_px)
@@ -32,14 +31,11 @@ export async function POST(request: NextRequest) {
           let message = ''
           let quality: 'high' | 'low' = 'low'
 
-          if (max_dimension >= min_pixels && max_dimension <= max_pixels) {
+          if (max_dimension >= min_pixels) {
             message = `✅ Image dimensions are within acceptable range (${width_px} × ${height_px} pixels) - High Quality!`
             quality = 'high'
-          } else if (max_dimension < min_pixels) {
-            message = `⚠️ Image too small. Maximum dimension is ${max_dimension} pixels (minimum: ${min_pixels} pixels) - Low Quality`
-            quality = 'low'
           } else {
-            message = `⚠️ Image too large. Maximum dimension is ${max_dimension} pixels (maximum: ${max_pixels} pixels) - Low Quality`
+            message = `⚠️ Image too small. Maximum dimension is ${max_dimension} pixels (minimum: ${min_pixels} pixels) - Low Quality`
             quality = 'low'
           }
 

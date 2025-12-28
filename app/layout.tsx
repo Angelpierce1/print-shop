@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Print Shop - Image Quality Checker',
-  description: 'Upload images to check if they meet print quality standards (480-1824 pixels)',
+  description: 'Upload images to check if they meet print quality standards (480+ pixels)',
 }
 
 export default function RootLayout({

@@ -8,33 +8,6 @@ import HEICConverter from '../components/HEICConverter'
 export default function Home() {
   const [activeTab, setActiveTab] = useState('upload')
   const [targetWidth, setTargetWidth] = useState(8.0)
-  const [printSizePreset, setPrintSizePreset] = useState<string>('custom')
-
-  const printSizes = [
-    { label: '3" × 5"', value: '3' },
-    { label: '4" × 6"', value: '4' },
-    { label: '5" × 7"', value: '5' },
-    { label: '8" × 10"', value: '8' },
-    { label: '8.5" × 11"', value: '8.5' },
-    { label: '11" × 14"', value: '11' },
-    { label: '11" × 17"', value: '11x17' },
-    { label: '12" × 18"', value: '12' },
-    { label: '13" × 19"', value: '13' },
-    { label: '19" (Max Width)', value: '19' },
-    { label: 'Custom', value: 'custom' },
-  ]
-
-  const handlePresetChange = (value: string) => {
-    setPrintSizePreset(value)
-    if (value !== 'custom') {
-      // Handle special case for 11" × 17"
-      if (value === '11x17') {
-        setTargetWidth(11)
-      } else {
-        setTargetWidth(parseFloat(value))
-      }
-    }
-  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -45,27 +18,13 @@ export default function Home() {
             🖨️ Print Shop
           </h1>
           <p className="text-lg text-gray-600">
-            Image Quality Checker - Verify print quality standards (480-1824 pixels)
+            Image Quality Checker - Verify print quality standards (480+ pixels)
           </p>
         </div>
 
         {/* Settings Sidebar */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">⚙️ Settings</h2>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
-            Print Size Preset
-          </label>
-          <select
-            value={printSizePreset}
-            onChange={(e) => handlePresetChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent mb-4"
-          >
-            {printSizes.map((size) => (
-              <option key={size.value} value={size.value}>
-                {size.label}
-              </option>
-            ))}
-          </select>
           <label className="block mb-2 text-sm font-medium text-gray-700">
             Target Print Width (inches)
           </label>
@@ -77,21 +36,17 @@ export default function Home() {
             value={targetWidth}
             onChange={(e) => {
               setTargetWidth(parseFloat(e.target.value))
-              setPrintSizePreset('custom')
             }}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-            disabled={printSizePreset !== 'custom'}
           />
           <p className="mt-2 text-sm text-gray-500">
-            {printSizePreset === 'custom'
-              ? 'The width you want to print the image at'
-              : `Print width set to ${targetWidth}"`}
+            The width you want to print the image at
           </p>
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <h3 className="font-semibold mb-2">📊 Quality Standards</h3>
             <p className="text-sm">
-              <strong>High Quality:</strong> 480 - 1824 pixels<br />
-              <strong>Low Quality:</strong> &lt; 480 or &gt; 1824 pixels
+              <strong>High Quality:</strong> 480+ pixels<br />
+              <strong>Low Quality:</strong> &lt; 480 pixels
             </p>
           </div>
         </div>
@@ -150,8 +105,8 @@ export default function Home() {
           <ol className="list-decimal list-inside space-y-1">
             <li>Upload an image using the file uploader</li>
             <li>The app checks the image&apos;s pixel dimensions</li>
-            <li>High quality images have dimensions between 480 and 1824 pixels</li>
-            <li>Low quality images have dimensions outside this range</li>
+            <li>High quality images have dimensions of 480 pixels or more</li>
+            <li>Low quality images have dimensions less than 480 pixels</li>
           </ol>
         </div>
       </div>

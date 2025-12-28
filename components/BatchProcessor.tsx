@@ -126,7 +126,7 @@ export default function BatchProcessor({ targetWidth }: BatchProcessorProps) {
                           <strong>Max Dimension:</strong> {result.max_dimension} pixels
                         </p>
                         <p>
-                          <strong>Range:</strong> 480 - 1824 pixels
+                          <strong>Range:</strong> 480+ pixels
                         </p>
                       </div>
                     </>

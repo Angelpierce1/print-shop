@@ -20,6 +20,7 @@ interface SuitabilityResult {
 
 export default function PrintCatalog() {
   const [catalog, setCatalog] = useState<PrintCatalogEntry[]>([])
+  const [selectedSize, setSelectedSize] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [results, setResults] = useState<{
@@ -106,37 +107,58 @@ export default function PrintCatalog() {
     <div>
       <h2 className="text-2xl font-semibold mb-4">Print Size Catalog</h2>
 
-      {/* Print Catalog Table */}
+      {/* Print Catalog Dropdown */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3">📊 Standard Print Sizes & Requirements</h3>
         {loadingCatalog ? (
           <p className="text-gray-500">Loading catalog...</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-4 py-2 text-left">Print Size</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">Best (300 PPI)</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center">Acceptable (150 PPI)</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Print Size
+              </label>
+              <select
+                value={selectedSize}
+                onChange={(e) => setSelectedSize(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+              >
+                <option value="">-- Select a print size --</option>
                 {catalog.map((entry, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-2 font-medium">
-                      {entry.size.label}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {entry.best.width} × {entry.best.height} px
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {entry.acceptable.width} × {entry.acceptable.height} px
-                    </td>
-                  </tr>
+                  <option key={idx} value={entry.size.label}>
+                    {entry.size.label}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
+
+            {selectedSize && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold mb-3 text-blue-900">
+                  {selectedSize} Requirements:
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-3 rounded-lg">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Best Quality (300 PPI)
+                    </p>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {catalog.find((e) => e.size.label === selectedSize)?.best.width} ×{' '}
+                      {catalog.find((e) => e.size.label === selectedSize)?.best.height} px
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg">
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Acceptable (150 PPI)
+                    </p>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {catalog.find((e) => e.size.label === selectedSize)?.acceptable.width} ×{' '}
+                      {catalog.find((e) => e.size.label === selectedSize)?.acceptable.height} px
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

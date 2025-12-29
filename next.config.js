@@ -5,6 +5,16 @@ const nextConfig = {
     // This prevents Webpack from trying to bundle the rust binary
     serverComponentsExternalPackages: ["@napi-rs/canvas"],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Externalize @napi-rs/canvas for server-side rendering
+      config.externals = config.externals || []
+      config.externals.push({
+        '@napi-rs/canvas': 'commonjs @napi-rs/canvas',
+      })
+    }
+    return config
+  },
   images: {
     domains: [],
     unoptimized: process.env.NODE_ENV === 'production' && process.env.GITHUB_PAGES === 'true',

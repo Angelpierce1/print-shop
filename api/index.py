@@ -34,17 +34,22 @@ def handler(req):
     try:
         # Parse request body
         body = {}
-        if req.method == "POST" and hasattr(req, 'body') and req.body:
-            try:
-                if isinstance(req.body, str):
-                    body = json.loads(req.body)
-                else:
-                    body = req.body
-            except:
-                body = {}
+        if req.method == "POST":
+            if hasattr(req, 'body') and req.body:
+                try:
+                    if isinstance(req.body, str):
+                        body = json.loads(req.body)
+                    else:
+                        body = req.body
+                except:
+                    body = {}
         
         # Get action from body or query string
-        action = body.get("action") or (req.query.get("action") if hasattr(req, 'query') else "info")
+        action = body.get("action")
+        if not action and hasattr(req, 'query') and req.query:
+            action = req.query.get("action", "info")
+        else:
+            action = action or "info"
         
         # Route to appropriate handler
         if action == "process_order":
@@ -67,25 +72,42 @@ def handler(req):
                     "check_resolution",
                     "calculate_price",
                     "test_guardrails"
-                ]
+                ],
+                "usage": {
+                    "method": "POST",
+                    "example": {
+                        "action": "calculate_price",
+                        "paper_stock": "100lb_cardstock",
+                        "quantity": 500,
+                        "width_inches": 3.5,
+                        "height_inches": 2.0
+                    }
+                }
             }
         
         return {
             "statusCode": 200,
             "headers": headers,
-            "body": json.dumps(result)
+            "body": json.dumps(result, default=str)
         }
     
     except Exception as e:
         import traceback
+        error_msg = str(e)
+        # Don't expose full traceback in production, but include it for debugging
+        traceback_info = traceback.format_exc() if "dev" in str(req.path).lower() else None
+        
+        error_response = {
+            "success": False,
+            "error": error_msg
+        }
+        if traceback_info:
+            error_response["traceback"] = traceback_info
+        
         return {
             "statusCode": 500,
             "headers": headers,
-            "body": json.dumps({
-                "success": False,
-                "error": str(e),
-                "traceback": traceback.format_exc()
-            })
+            "body": json.dumps(error_response, default=str)
         }
 
 

@@ -8,3 +8,4 @@ __all__ = ["check_inventory", "check_resolution", "calculate_price"]
 
 
 
+

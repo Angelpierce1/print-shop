@@ -7,13 +7,19 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agent.react_agent import ReActAgent
-from tools.inventory_tool import check_inventory
-from tools.resolution_tool import check_resolution
-from tools.pricing_tool import calculate_price
-from guardrails.spec_check_guardrail import SpecCheckGuardrail
-from guardrails.preflight_guardrail import PreflightGuardrail
-from guardrails.quote_guardrail import QuoteGuardrail
+# Try to import modules, but handle gracefully if they fail
+try:
+    from agent.react_agent import ReActAgent
+    from tools.inventory_tool import check_inventory
+    from tools.resolution_tool import check_resolution
+    from tools.pricing_tool import calculate_price
+    from guardrails.spec_check_guardrail import SpecCheckGuardrail
+    from guardrails.preflight_guardrail import PreflightGuardrail
+    from guardrails.quote_guardrail import QuoteGuardrail
+    IMPORTS_OK = True
+except Exception as e:
+    IMPORTS_OK = False
+    IMPORT_ERROR = str(e)
 
 
 def handler(req):
@@ -28,28 +34,51 @@ def handler(req):
     }
     
     # Handle OPTIONS for CORS
-    if req.method == "OPTIONS":
-        return {"statusCode": 200, "headers": headers, "body": ""}
+    method = getattr(req, 'method', 'GET')
+    if method == "OPTIONS":
+        return {
+            "statusCode": 200,
+            "headers": headers,
+            "body": ""
+        }
+    
+    # If imports failed, return error info
+    if not IMPORTS_OK:
+        return {
+            "statusCode": 500,
+            "headers": headers,
+            "body": json.dumps({
+                "success": False,
+                "error": "Import error",
+                "details": IMPORT_ERROR,
+                "message": "Check Vercel function logs for full error"
+            })
+        }
     
     try:
         # Parse request body
         body = {}
-        if req.method == "POST":
-            if hasattr(req, 'body') and req.body:
+        if method == "POST":
+            req_body = getattr(req, 'body', None)
+            if req_body:
                 try:
-                    if isinstance(req.body, str):
-                        body = json.loads(req.body)
+                    if isinstance(req_body, str):
+                        body = json.loads(req_body)
+                    elif isinstance(req_body, dict):
+                        body = req_body
                     else:
-                        body = req.body
+                        body = {}
                 except:
                     body = {}
         
         # Get action from body or query string
         action = body.get("action")
-        if not action and hasattr(req, 'query') and req.query:
-            action = req.query.get("action", "info")
-        else:
-            action = action or "info"
+        if not action:
+            query = getattr(req, 'query', {})
+            if isinstance(query, dict):
+                action = query.get("action", "info")
+            else:
+                action = "info"
         
         # Route to appropriate handler
         if action == "process_order":
@@ -94,20 +123,16 @@ def handler(req):
     except Exception as e:
         import traceback
         error_msg = str(e)
-        # Don't expose full traceback in production, but include it for debugging
-        traceback_info = traceback.format_exc() if "dev" in str(req.path).lower() else None
-        
-        error_response = {
-            "success": False,
-            "error": error_msg
-        }
-        if traceback_info:
-            error_response["traceback"] = traceback_info
+        traceback_info = traceback.format_exc()
         
         return {
             "statusCode": 500,
             "headers": headers,
-            "body": json.dumps(error_response, default=str)
+            "body": json.dumps({
+                "success": False,
+                "error": error_msg,
+                "traceback": traceback_info
+            }, default=str)
         }
 
 

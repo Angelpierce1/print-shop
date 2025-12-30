@@ -97,8 +97,6 @@ class CalculatePriceRequest(BaseModel):
 
 
 @app.get("/")
-@app.get("/api")
-@app.get("/api/index")
 async def root():
     """Root endpoint - returns API info."""
     if not IMPORTS_OK:
@@ -138,7 +136,7 @@ async def root():
     }
 
 
-@app.post("/api/process_order")
+@app.post("/process_order")
 async def process_order(request: ProcessOrderRequest):
     """Process an order through the agent."""
     if not MODULES.get('ReActAgent'):
@@ -153,7 +151,7 @@ async def process_order(request: ProcessOrderRequest):
     return {"success": True, "result": result}
 
 
-@app.post("/api/check_inventory")
+@app.post("/check_inventory")
 async def check_inventory_endpoint(request: CheckInventoryRequest):
     """Check inventory for paper stock."""
     if not MODULES.get('check_inventory'):
@@ -171,7 +169,7 @@ async def check_inventory_endpoint(request: CheckInventoryRequest):
     return {"success": True, "result": result}
 
 
-@app.post("/api/check_resolution")
+@app.post("/check_resolution")
 async def check_resolution_endpoint(request: CheckResolutionRequest):
     """Check file resolution."""
     if not MODULES.get('check_resolution'):
@@ -188,7 +186,7 @@ async def check_resolution_endpoint(request: CheckResolutionRequest):
     return {"success": True, "result": result}
 
 
-@app.post("/api/calculate_price")
+@app.post("/calculate_price")
 async def calculate_price_endpoint(request: CalculatePriceRequest):
     """Calculate price for an order."""
     if not MODULES.get('calculate_price'):
@@ -209,7 +207,7 @@ async def calculate_price_endpoint(request: CalculatePriceRequest):
     return {"success": True, "result": result}
 
 
-@app.post("/api/test_guardrails")
+@app.post("/test_guardrails")
 async def test_guardrails():
     """Test the guardrail system."""
     if not MODULES.get('SpecCheckGuardrail'):

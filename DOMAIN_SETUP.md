@@ -70,3 +70,4 @@ curl https://your-project.vercel.app/api/index
 curl https://www.timsprintshop.com/api/index
 ```
 
+

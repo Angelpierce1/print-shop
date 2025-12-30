@@ -1,243 +1,239 @@
-"""Vercel serverless function for Print Shop AI Order Guardrail API using FastAPI."""
+"""Flask app for Print Shop AI Order Guardrail - Vercel serverless function."""
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import Optional
-import json
+import os
 import sys
-import traceback
 from pathlib import Path
 
-# Add parent directory to path
+# Add parent directory to path for imports
+parent_dir = str(Path(__file__).parent.parent)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from flask import Flask, render_template, request, jsonify, url_for
+from PIL import Image
 try:
-    parent_dir = str(Path(__file__).parent.parent)
-    if parent_dir not in sys.path:
-        sys.path.insert(0, parent_dir)
-except:
-    pass
-
-# Initialize FastAPI app - MUST be named 'app' for Vercel
-app = FastAPI(title="Print Shop AI Order Guardrail API")
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Try to import modules
-MODULES = {}
-IMPORTS_OK = False
-IMPORT_ERROR = None
-
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass  # pillow-heif is optional
 try:
-    from tools.inventory_tool import check_inventory
-    MODULES['check_inventory'] = check_inventory
-    from tools.pricing_tool import calculate_price
-    MODULES['calculate_price'] = calculate_price
-    from guardrails.spec_check_guardrail import SpecCheckGuardrail
-    MODULES['SpecCheckGuardrail'] = SpecCheckGuardrail
-    from guardrails.quote_guardrail import QuoteGuardrail
-    MODULES['QuoteGuardrail'] = QuoteGuardrail
-    
-    # Optional imports
-    try:
-        from tools.resolution_tool import check_resolution
-        MODULES['check_resolution'] = check_resolution
-    except Exception as e:
-        MODULES['check_resolution'] = None
-        MODULES['resolution_error'] = str(e)
-    
-    try:
-        from guardrails.preflight_guardrail import PreflightGuardrail
-        MODULES['PreflightGuardrail'] = PreflightGuardrail
-    except Exception as e:
-        MODULES['PreflightGuardrail'] = None
-    
-    try:
-        from agent.react_agent import ReActAgent
-        MODULES['ReActAgent'] = ReActAgent
-    except Exception as e:
-        MODULES['ReActAgent'] = None
-    
-    IMPORTS_OK = True
-except Exception as e:
-    IMPORT_ERROR = str(e)
-    IMPORT_TRACEBACK = traceback.format_exc()
+    from pdf2image import convert_from_bytes
+except ImportError:
+    convert_from_bytes = None
+from email.mime.text import MIMEText
 
+# Import agent - adjust path as needed
+try:
+    from agent import PrintShopAgent
+except ImportError:
+    # Fallback if agent is in different location
+    PrintShopAgent = None
 
-# Pydantic models for request validation
-class ProcessOrderRequest(BaseModel):
-    query: str
-    file_path: Optional[str] = None
+# Initialize Flask app - MUST be named 'app' for Vercel
+app = Flask(__name__, 
+            template_folder=str(Path(__file__).parent.parent / 'templates'),
+            static_folder=str(Path(__file__).parent.parent / 'static'))
 
+# For Vercel serverless, we can't use file uploads the same way
+# Uploads would need to be handled via cloud storage (S3, etc.)
+UPLOAD_FOLDER = '/tmp/uploads'  # Use /tmp for serverless
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-class CheckInventoryRequest(BaseModel):
-    paper_stock: str
-    color: str = "white"
-    finish: str = "matte"
+# Initialize the AI Order Guardrail Agent
+agent = PrintShopAgent() if PrintShopAgent else None
 
+# Standard Print Sizes (Inches)
+PRINT_SIZES = {
+    "3x5": (3, 5), "4x6": (4, 6), "5x7": (5, 7),
+    "8x10": (8, 10), "8.5x11": (8.5, 11), "11x14": (11, 14),
+    "11x17": (11, 17), "12x18": (12, 18), "13x19": (13, 19)
+}
 
-class CheckResolutionRequest(BaseModel):
-    file_path: str
+MIN_DPI = 225
 
+def send_approval_email(email, filename, status):
+    """Simulates sending an email"""
+    # In production, use SendGrid, SES, or real SMTP credentials
+    print(f"--- EMAIL SENT TO {email} ---")
+    print(f"Subject: Order Update - {status}")
+    print(f"Body: Your design '{filename}' is {status}.")
+    print("-------------------------------")
+    return True
 
-class CalculatePriceRequest(BaseModel):
-    paper_stock: str
-    quantity: int
-    width_inches: float
-    height_inches: float
-    full_color: bool = True
-    rush_type: Optional[str] = None
-
-
-@app.get("/")
-async def root():
-    """Root endpoint - returns API info."""
-    if not IMPORTS_OK:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": "Import error",
-                "details": IMPORT_ERROR,
-                "traceback": IMPORT_TRACEBACK if 'IMPORT_TRACEBACK' in globals() else None
+@app.route('/')
+@app.route('/api')
+@app.route('/api/index')
+def index():
+    """Root endpoint - returns API info or serves HTML template."""
+    # For API endpoint, return JSON
+    if request.path.startswith('/api'):
+        return jsonify({
+            "success": True,
+            "message": "Print Shop AI Order Guardrail API",
+            "endpoints": {
+                "upload": "/api/upload",
+                "submit_order": "/api/submit-order",
+                "validate_order": "/api/validate-order"
             }
-        )
+        })
+    # For root, try to serve template (may not work in serverless)
+    try:
+        return render_template('index.html', sizes=PRINT_SIZES)
+    except:
+        return jsonify({
+            "message": "Print Shop API - Use /api endpoints",
+            "endpoints": ["/api/upload", "/api/submit-order", "/api/validate-order"]
+        })
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Upload file endpoint - Note: File uploads need cloud storage for production."""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
     
-    available = []
-    if MODULES.get('check_inventory'):
-        available.append("check_inventory")
-    if MODULES.get('calculate_price'):
-        available.append("calculate_price")
-    if MODULES.get('check_resolution'):
-        available.append("check_resolution")
-    if MODULES.get('SpecCheckGuardrail'):
-        available.append("test_guardrails")
-    if MODULES.get('ReActAgent'):
-        available.append("process_order")
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    filename = file.filename.lower()
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
     
-    return {
-        "success": True,
-        "message": "Print Shop AI Order Guardrail API",
-        "available_actions": available,
-        "modules_loaded": {
-            "check_inventory": MODULES.get('check_inventory') is not None,
-            "calculate_price": MODULES.get('calculate_price') is not None,
-            "check_resolution": MODULES.get('check_resolution') is not None,
-            "guardrails": MODULES.get('SpecCheckGuardrail') is not None,
-            "agent": MODULES.get('ReActAgent') is not None
-        }
+    # --- CONVERSION LOGIC ---
+    img = None
+    
+    try:
+        if filename.endswith('.pdf'):
+            if convert_from_bytes is None:
+                return jsonify({"error": "PDF conversion not available"}), 500
+            # Convert first page of PDF to JPG
+            file_data = file.read()
+            images = convert_from_bytes(file_data)
+            img = images[0]
+            new_filename = filename.replace('.pdf', '.jpg')
+            filepath = os.path.join(UPLOAD_FOLDER, new_filename)
+            img.save(filepath, 'JPEG')
+        elif filename.endswith('.heic'):
+            # Convert HEIC to JPG
+            img = Image.open(file)
+            new_filename = filename.replace('.heic', '.jpg')
+            filepath = os.path.join(UPLOAD_FOLDER, new_filename)
+            img.save(filepath, "JPEG")
+        else:
+            # Standard Save
+            file.save(filepath)
+            img = Image.open(filepath)
+
+        # --- DPI CALCULATION ---
+        width_px, height_px = img.size
+        
+        return jsonify({
+            "success": True,
+            "filename": os.path.basename(filepath),
+            "width": width_px,
+            "height": height_px,
+            "message": "File uploaded successfully"
+        })
+    except Exception as e:
+        return jsonify({"error": f"File processing error: {str(e)}"}), 500
+
+@app.route('/api/submit-order', methods=['POST'])
+def submit_order():
+    """
+    Submit order with AI Order Guardrail validation.
+    Uses the three-layer guardrail system to catch errors before human review.
+    """
+    if not agent:
+        return jsonify({"error": "Agent not available"}), 500
+    
+    data = request.json
+    
+    # Get file path from filename
+    filename = data.get('filename', '')
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    
+    # Check if file exists (use original if converted)
+    if not os.path.exists(file_path):
+        # Try to find the file (might have been converted)
+        base_name = os.path.splitext(filename)[0]
+        for ext in ['.jpg', '.jpeg', '.png', '.pdf']:
+            test_path = os.path.join(UPLOAD_FOLDER, base_name + ext)
+            if os.path.exists(test_path):
+                file_path = test_path
+                filename = os.path.basename(test_path)
+                break
+    
+    # Prepare order data for agent
+    order_data = {
+        'email': data.get('email', ''),
+        'name': data.get('name', ''),
+        'size': data.get('size', ''),
+        'paper': data.get('paper', '100lb Matte'),  # Default paper
+        'quantity': data.get('quantity', 1),
+        'file_path': file_path,
+        'filename': filename
     }
-
-
-@app.post("/process_order")
-async def process_order(request: ProcessOrderRequest):
-    """Process an order through the agent."""
-    if not MODULES.get('ReActAgent'):
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": "ReActAgent not available"}
-        )
     
-    agent = MODULES['ReActAgent']()
-    result = agent.process_order(request.query, request.file_path)
+    # Process order through AI Agent with guardrails
+    result = agent.process_order(order_data)
     
-    return {"success": True, "result": result}
-
-
-@app.post("/check_inventory")
-async def check_inventory_endpoint(request: CheckInventoryRequest):
-    """Check inventory for paper stock."""
-    if not MODULES.get('check_inventory'):
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": "check_inventory not available"}
-        )
+    if not result.get('valid', False):
+        # Order failed validation - return error details
+        return jsonify({
+            "success": False,
+            "error": result.get('error', result.get('message', 'Order validation failed')),
+            "layer": result.get('layer', 'unknown'),
+            "details": result,
+            "message": result.get('message', 'Please fix the errors and try again.')
+        }), 400
     
-    result = MODULES['check_inventory'](
-        request.paper_stock,
-        request.color,
-        request.finish
+    # Order passed all guardrails - proceed with submission
+    # Simulate "Accepted" Email
+    order_summary = result.get('order_summary', {})
+    send_approval_email(
+        data.get('email', ''),
+        filename, 
+        f"Accepted - Order Total: {order_summary.get('price', 'N/A')}"
     )
     
-    return {"success": True, "result": result}
-
-
-@app.post("/check_resolution")
-async def check_resolution_endpoint(request: CheckResolutionRequest):
-    """Check file resolution."""
-    if not MODULES.get('check_resolution'):
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": "check_resolution not available",
-                "details": MODULES.get('resolution_error', 'Unknown error')
-            }
-        )
-    
-    result = MODULES['check_resolution'](request.file_path)
-    return {"success": True, "result": result}
-
-
-@app.post("/calculate_price")
-async def calculate_price_endpoint(request: CalculatePriceRequest):
-    """Calculate price for an order."""
-    if not MODULES.get('calculate_price'):
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": "calculate_price not available"}
-        )
-    
-    result = MODULES['calculate_price'](
-        paper_stock=request.paper_stock,
-        quantity=request.quantity,
-        width_inches=request.width_inches,
-        height_inches=request.height_inches,
-        full_color=request.full_color,
-        rush_type=request.rush_type
-    )
-    
-    return {"success": True, "result": result}
-
-
-@app.post("/test_guardrails")
-async def test_guardrails():
-    """Test the guardrail system."""
-    if not MODULES.get('SpecCheckGuardrail'):
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": "Guardrails not available"}
-        )
-    
-    spec_guardrail = MODULES['SpecCheckGuardrail']()
-    quote_guardrail = MODULES.get('QuoteGuardrail')
-    
-    # Test Layer 1
-    test_order = {
-        "paper_stock": "100lb_cardstock",
-        "color": "black",
-        "finish": "matte",
-        "full_color": True,
-        "dark_paper": True
-    }
-    layer1_result = spec_guardrail.validate_order_spec(test_order)
-    
-    # Test Layer 3
-    layer3_result = None
-    if quote_guardrail:
-        test_response = "The price for your order will be $125.50"
-        layer3_result = quote_guardrail.validate_response(test_response, [])
-    
-    return {
+    # Return success with order summary
+    return jsonify({
         "success": True,
-        "layer1_spec_check": layer1_result,
-        "layer3_quote_guardrail": layer3_result,
-        "layer2_preflight": "Requires file to test"
+        "message": "Order validated and submitted successfully! All guardrails passed.",
+        "order_summary": order_summary,
+        "reasoning": result.get('reasoning', [])
+    })
+
+
+@app.route('/api/validate-order', methods=['POST'])
+def validate_order():
+    """
+    Validate order without submitting (preview/check only).
+    Useful for real-time validation feedback.
+    """
+    if not agent:
+        return jsonify({"error": "Agent not available"}), 500
+    
+    data = request.json
+    
+    filename = data.get('filename', '')
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    
+    if not os.path.exists(file_path):
+        return jsonify({
+            "valid": False,
+            "error": "File not found. Please upload a file first."
+        }), 400
+    
+    order_data = {
+        'email': data.get('email', ''),
+        'name': data.get('name', ''),
+        'size': data.get('size', ''),
+        'paper': data.get('paper', '100lb Matte'),
+        'quantity': data.get('quantity', 1),
+        'file_path': file_path,
+        'filename': filename
     }
+    
+    result = agent.process_order(order_data)
+    
+    return jsonify(result)

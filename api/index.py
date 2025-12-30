@@ -10,26 +10,53 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from flask import Flask, request, jsonify
-from PIL import Image
+
+# Initialize Flask app - MUST be named 'app' for Vercel
+app = Flask(__name__)
+
+# Simple test endpoint first
+@app.route('/')
+def index():
+    """Root endpoint - returns API info."""
+    return jsonify({
+        "success": True,
+        "message": "Print Shop AI Order Guardrail API is working!",
+        "endpoints": {
+            "upload": "/upload",
+            "submit_order": "/submit-order",
+            "validate_order": "/validate-order"
+        }
+    })
+
+# Try to import optional dependencies
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
 try:
     from pillow_heif import register_heif_opener
     register_heif_opener()
 except ImportError:
-    pass  # pillow-heif is optional
+    pass
+
 try:
     from pdf2image import convert_from_bytes
+    PDF_AVAILABLE = True
 except ImportError:
     convert_from_bytes = None
+    PDF_AVAILABLE = False
 
-# Import agent - adjust path as needed
+# Import agent
 try:
     from agent import PrintShopAgent
     agent = PrintShopAgent()
-except ImportError:
+    AGENT_AVAILABLE = True
+except ImportError as e:
     agent = None
-
-# Initialize Flask app - MUST be named 'app' for Vercel
-app = Flask(__name__)
+    AGENT_AVAILABLE = False
+    AGENT_ERROR = str(e)
 
 # For Vercel serverless, use /tmp for uploads
 UPLOAD_FOLDER = '/tmp/uploads'
@@ -45,22 +72,12 @@ def send_approval_email(email, filename, status):
     print("-------------------------------")
     return True
 
-@app.route('/')
-def index():
-    """Root endpoint - returns API info."""
-    return jsonify({
-        "success": True,
-        "message": "Print Shop AI Order Guardrail API",
-        "endpoints": {
-            "upload": "/upload",
-            "submit_order": "/submit-order",
-            "validate_order": "/validate-order"
-        }
-    })
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Upload file endpoint."""
+    if not PIL_AVAILABLE:
+        return jsonify({"error": "Image processing not available"}), 500
+        
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
     
@@ -73,7 +90,7 @@ def upload_file():
     
     try:
         if filename.endswith('.pdf'):
-            if convert_from_bytes is None:
+            if not PDF_AVAILABLE:
                 return jsonify({"error": "PDF conversion not available"}), 500
             file_data = file.read()
             images = convert_from_bytes(file_data)
@@ -105,8 +122,11 @@ def upload_file():
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
     """Submit order with AI Order Guardrail validation."""
-    if not agent:
-        return jsonify({"error": "Agent not available"}), 500
+    if not AGENT_AVAILABLE:
+        return jsonify({
+            "error": "Agent not available",
+            "details": AGENT_ERROR if 'AGENT_ERROR' in globals() else "Unknown error"
+        }), 500
     
     data = request.json or {}
     
@@ -160,8 +180,11 @@ def submit_order():
 @app.route('/validate-order', methods=['POST'])
 def validate_order():
     """Validate order without submitting."""
-    if not agent:
-        return jsonify({"error": "Agent not available"}), 500
+    if not AGENT_AVAILABLE:
+        return jsonify({
+            "error": "Agent not available",
+            "details": AGENT_ERROR if 'AGENT_ERROR' in globals() else "Unknown error"
+        }), 500
     
     data = request.json or {}
     
@@ -186,3 +209,17 @@ def validate_order():
     
     result = agent.process_order(order_data)
     return jsonify(result)
+
+@app.route('/status')
+def status():
+    """Check API status and dependencies."""
+    return jsonify({
+        "success": True,
+        "status": "online",
+        "dependencies": {
+            "PIL": PIL_AVAILABLE,
+            "PDF": PDF_AVAILABLE,
+            "Agent": AGENT_AVAILABLE,
+            "agent_error": AGENT_ERROR if not AGENT_AVAILABLE and 'AGENT_ERROR' in globals() else None
+        }
+    })

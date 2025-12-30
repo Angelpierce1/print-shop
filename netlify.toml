@@ -1,0 +1,41 @@
+[build]
+  command = "echo 'No build needed for Flask app'"
+  functions = "netlify/functions"
+  publish = "."
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Handle Flask routes
+[[redirects]]
+  from = "/upload"
+  to = "/.netlify/functions/upload"
+  status = 200
+
+[[redirects]]
+  from = "/submit-order"
+  to = "/.netlify/functions/submit-order"
+  status = 200
+
+[[redirects]]
+  from = "/validate-order"
+  to = "/.netlify/functions/validate-order"
+  status = 200
+
+# Serve static files
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/templates/index.html"
+  status = 200
+

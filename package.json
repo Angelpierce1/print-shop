@@ -1,0 +1,11 @@
+{
+  "name": "print-shop",
+  "version": "1.0.0",
+  "description": "Print Shop with AI Order Guardrails",
+  "scripts": {
+    "deploy:netlify": "./deploy_netlify.sh"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

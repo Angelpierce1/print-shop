@@ -1,24 +1,12 @@
 # Core dependencies for Print Shop AI Order Guardrail PoC
 
-# Web framework
-flask>=3.0.0
-
-# Image/PDF processing
+# Image/PDF processing (make PyMuPDF optional to avoid crashes)
 Pillow>=10.0.0
-pillow-heif>=0.13.0
-pdf2image>=1.16.0
-PyPDF2>=3.0.0
 PyMuPDF>=1.23.0
 
 # Data handling
 python-dateutil>=2.8.0
 
-# Optional: For LLM integration (add your preferred LLM library)
-# openai>=1.0.0
-# langchain>=0.1.0
-# anthropic>=0.7.0
-
-# Note: pdf2image requires poppler-utils. Install with:
-# macOS: brew install poppler
-# Ubuntu/Debian: sudo apt-get install poppler-utils
-# Windows: Download poppler from https://github.com/oschwartz10612/poppler-windows/releases
+# Note: PyMuPDF (fitz) is used for PDF processing but may fail in serverless
+# If it fails, resolution checking for PDFs will be unavailable
+# Pillow is required for image processing

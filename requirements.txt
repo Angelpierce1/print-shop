@@ -1,0 +1,14 @@
+# Core dependencies for Print Shop AI Order Guardrail PoC
+
+# Image/PDF processing
+Pillow>=10.0.0
+PyMuPDF>=1.23.0
+
+# Data handling
+python-dateutil>=2.8.0
+
+# Optional: For LLM integration (add your preferred LLM library)
+# openai>=1.0.0
+# langchain>=0.1.0
+# anthropic>=0.7.0
+

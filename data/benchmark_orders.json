@@ -1,0 +1,54 @@
+[
+  {
+    "order_id": "FAIL-001",
+    "customer_request": "I need 500 business cards on black 100lb cardstock, full color",
+    "file_path": null,
+    "paper_stock": "100lb_cardstock",
+    "color": "black",
+    "finish": "matte",
+    "quantity": 500,
+    "width_inches": 3.5,
+    "height_inches": 2.0,
+    "full_color": true,
+    "rejection_reason": "Full color on black paper requires white ink, which we don't have",
+    "rejection_category": "impossible_spec",
+    "rejection_date": "2024-01-15",
+    "expected_agent_action": "Reject order, explain white ink limitation, suggest white paper",
+    "should_catch_error": true
+  },
+  {
+    "order_id": "FAIL-002",
+    "customer_request": "Print 1000 flyers, file attached",
+    "file_path": "sample_low_res.jpg",
+    "paper_stock": "80lb_text",
+    "color": "white",
+    "finish": "gloss",
+    "quantity": 1000,
+    "width_inches": 8.5,
+    "height_inches": 11.0,
+    "full_color": true,
+    "rejection_reason": "File resolution is only 72 DPI, need minimum 300 DPI",
+    "rejection_category": "low_res",
+    "rejection_date": "2024-02-20",
+    "expected_agent_action": "Reject file, request higher resolution file",
+    "should_catch_error": true
+  },
+  {
+    "order_id": "FAIL-003",
+    "customer_request": "Print 50 posters, 24x36 inches",
+    "file_path": null,
+    "paper_stock": "100lb_cardstock",
+    "color": "white",
+    "finish": "matte",
+    "quantity": 50,
+    "width_inches": 24.0,
+    "height_inches": 36.0,
+    "full_color": true,
+    "rejection_reason": "Size 24x36 exceeds maximum 12x18 inches",
+    "rejection_category": "wrong_size",
+    "rejection_date": "2024-03-10",
+    "expected_agent_action": "Reject order, explain size limitations",
+    "should_catch_error": true
+  }
+]
+

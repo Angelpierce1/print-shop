@@ -1,6 +1,3 @@
-.next/
-node_modules/
-.env*.local
 __pycache__/
 *.pyc
 *.pyo
@@ -11,6 +8,7 @@ env/
 ENV/
 .venv
 *.egg-info/
-dist/
-build/
-.env
+node_modules/
+.git/
+.github/
+

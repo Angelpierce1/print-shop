@@ -1,0 +1,48 @@
+{
+  "paper_stocks": {
+    "100lb_cardstock": {
+      "colors": ["white", "cream", "ivory"],
+      "finish": ["matte", "gloss"],
+      "available": true,
+      "white_ink_capable": false
+    },
+    "80lb_text": {
+      "colors": ["white", "cream"],
+      "finish": ["matte", "gloss", "uncoated"],
+      "available": true,
+      "white_ink_capable": false
+    },
+    "14pt_cardstock": {
+      "colors": ["white"],
+      "finish": ["matte", "gloss"],
+      "available": true,
+      "white_ink_capable": false
+    }
+  },
+  "printing_capabilities": {
+    "full_color": true,
+    "spot_color": true,
+    "white_ink": false,
+    "metallic_inks": false,
+    "pantone_matching": true
+  },
+  "file_requirements": {
+    "min_resolution_dpi": 300,
+    "min_bleed_mm": 3,
+    "supported_formats": ["PDF", "PNG", "JPG", "JPEG", "TIFF"],
+    "max_file_size_mb": 100,
+    "color_space": "CMYK"
+  },
+  "size_limits": {
+    "max_width_inches": 12,
+    "max_height_inches": 18,
+    "min_width_inches": 3,
+    "min_height_inches": 4
+  },
+  "production_time_days": {
+    "standard": 3,
+    "rush": 1,
+    "express": 0.5
+  }
+}
+

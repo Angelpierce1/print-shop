@@ -43,8 +43,20 @@ Vercel will automatically deploy your API and provide a URL like:
 
 ## Finding Your Vercel URL
 
-After deployment, Vercel will show you your deployment URL. It will look like:
-- `https://print-shop-xxxxx.vercel.app`
+After deployment, Vercel provides different URLs:
+
+### Production URL (Recommended for Testing)
+- **Location**: Vercel Dashboard → Your Project → Top of page
+- **Format**: `https://print-shop.vercel.app` or `https://print-shop-xxxxx.vercel.app`
+- **Access**: Public (no authentication required)
+- **Use this URL for testing your API**
+
+### Preview URLs (Development/PR Deployments)
+- **Format**: `https://print-shop-xxxxx-username.vercel.app`
+- **Access**: May require authentication (deployment protection)
+- **Note**: Preview deployments often have authentication enabled
+
+**Important**: Use the **Production URL** (shown at the top of your project page) to test your API. Preview URLs may require authentication and won't work for API testing.
 
 Your API endpoint will be at:
 - `https://print-shop-xxxxx.vercel.app/api/index`
